@@ -776,14 +776,19 @@ static OSStatus topRenderNotifyCallback(void *inRefCon, AudioUnitRenderActionFla
 }
 
 - (id)initWithAudioDescription:(AudioStreamBasicDescription)audioDescription inputEnabled:(BOOL)enableInput useVoiceProcessing:(BOOL)useVoiceProcessing {
+    return [self initWithAudioDescription:audioDescription inputEnabled:enableInput useVoiceProcessing:useVoiceProcessing audioSessionCategory:enableInput? kAudioSessionCategory_PlayAndRecord: kAudioSessionCategory_MediaPlayback];
+}
+
+- (id)initWithAudioDescription:(AudioStreamBasicDescription)audioDescription inputEnabled:(BOOL)enableInput useVoiceProcessing:(BOOL)useVoiceProcessing audioSessionCategory:(UInt32)audioSessionCategory{
     if ( !(self = [super init]) ) return nil;
     
     NSAssert(audioDescription.mFormatID == kAudioFormatLinearPCM, @"Only linear PCM supported");
 
     __interruptionListenerSelf = self;
     
-    _audioSessionCategory = enableInput ? kAudioSessionCategory_PlayAndRecord : kAudioSessionCategory_MediaPlayback;
+    _audioSessionCategory = audioSessionCategory;
     _allowMixingWithOtherApps = YES;
+    _shouldDuckOtherApps = audioSessionCategory == kAudioSessionCategory_AmbientSound? YES: NO;
     _audioDescription = audioDescription;
     _inputEnabled = enableInput;
     _masterOutputVolume = 1.0;
@@ -1687,10 +1692,13 @@ NSTimeInterval AEConvertFramesToSeconds(AEAudioController *THIS, long frames) {
     OSStatus result = AudioSessionSetProperty (kAudioSessionProperty_OverrideCategoryEnableBluetoothInput, sizeof (allowBluetoothInput), &allowBluetoothInput);
     checkResult(result, "AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryEnableBluetoothInput)");
     
-    if ( category == kAudioSessionCategory_MediaPlayback || category == kAudioSessionCategory_PlayAndRecord ) {
+    if ( category == kAudioSessionCategory_MediaPlayback || category == kAudioSessionCategory_PlayAndRecord || category == kAudioSessionCategory_AmbientSound) {
         UInt32 allowMixing = _allowMixingWithOtherApps;
         checkResult(AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryMixWithOthers, sizeof (allowMixing), &allowMixing),
                     "AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryMixWithOthers)");
+        UInt32 shouldDuck = _shouldDuckOtherApps;
+        checkResult(AudioSessionSetProperty(kAudioSessionProperty_OtherMixableAudioShouldDuck, sizeof (shouldDuck), &shouldDuck),
+                    "AudioSessionSetProperty(kAudioSessionProperty_OtherMixableAudioShouldDuck)");
     }
 }
 
@@ -1706,6 +1714,14 @@ NSTimeInterval AEConvertFramesToSeconds(AEAudioController *THIS, long frames) {
     UInt32 allowMixing = _allowMixingWithOtherApps;
     checkResult(AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryMixWithOthers, sizeof (allowMixing), &allowMixing),
                 "AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryMixWithOthers)");
+}
+
+-(void)setShouldDuckOtherApps:(BOOL)shouldDuckOtherApps {
+    _shouldDuckOtherApps = shouldDuckOtherApps;
+    
+    UInt32 shouldDuck = _shouldDuckOtherApps;
+    checkResult(AudioSessionSetProperty(kAudioSessionProperty_OtherMixableAudioShouldDuck, sizeof (shouldDuck), &shouldDuck),
+                "AudioSessionSetProperty(kAudioSessionProperty_OtherMixableAudioShouldDuck)");
 }
 
 -(void)setMasterOutputVolume:(float)masterOutputVolume {
@@ -1732,10 +1748,13 @@ NSTimeInterval AEConvertFramesToSeconds(AEAudioController *THIS, long frames) {
     OSStatus result = AudioSessionSetProperty (kAudioSessionProperty_OverrideCategoryEnableBluetoothInput, sizeof (allowBluetoothInput), &allowBluetoothInput);
     checkResult(result, "AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryEnableBluetoothInput)");
     
-    if ( _audioSessionCategory == kAudioSessionCategory_MediaPlayback || _audioSessionCategory == kAudioSessionCategory_PlayAndRecord ) {
+    if ( _audioSessionCategory == kAudioSessionCategory_MediaPlayback || _audioSessionCategory == kAudioSessionCategory_PlayAndRecord || _audioSessionCategory == kAudioSessionCategory_AmbientSound) {
         UInt32 allowMixing = _allowMixingWithOtherApps;
         checkResult(AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryMixWithOthers, sizeof (allowMixing), &allowMixing),
                     "AudioSessionSetProperty(kAudioSessionProperty_OverrideCategoryMixWithOthers)");
+        UInt32 shouldDuck = _shouldDuckOtherApps;
+        checkResult(AudioSessionSetProperty(kAudioSessionProperty_OtherMixableAudioShouldDuck, sizeof (shouldDuck), &shouldDuck),
+                    "AudioSessionSetProperty(kAudioSessionProperty_OtherMixableAudioShouldDuck)");
     }
 }
 

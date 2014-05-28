@@ -498,6 +498,19 @@ typedef void (*AEAudioControllerMainThreadMessageHandler)(AEAudioController *aud
  */
 - (id)initWithAudioDescription:(AudioStreamBasicDescription)audioDescription inputEnabled:(BOOL)enableInput useVoiceProcessing:(BOOL)useVoiceProcessing;
 
+
+/*!
+ * Initialize the audio controller system, with the audio description you provide.
+ *
+ *  Creates and configures the input/output audio unit and initial mixer audio unit.
+ *
+ * @param audioDescription    Audio description to use for all audio
+ * @param enableInput         Whether to enable audio input from the microphone or another input device
+ * @param useVoiceProcessing  Whether to use the voice processing unit (see @link voiceProcessingEnabled @endlink and @link voiceProcessingAvailable @endlink).
+ * @param audioSessionCategory Audio session category to use.
+ */
+- (id)initWithAudioDescription:(AudioStreamBasicDescription)audioDescription inputEnabled:(BOOL)enableInput useVoiceProcessing:(BOOL)useVoiceProcessing audioSessionCategory:(UInt32)audioSessionCategory;
+
 /*!
  * Start audio engine
  *
@@ -1091,6 +1104,18 @@ NSTimeInterval AEConvertFramesToSeconds(AEAudioController *audioController, long
  *  Default: YES
  */
 @property (nonatomic, assign) BOOL allowMixingWithOtherApps;
+
+/*! 
+ * Whether to duck audio in other apps
+ *
+ *  When this is YES, then audio in other apps will be ducked when the current application makes any sound.
+ *  If NO, then any other apps playing audio will be stopped when the audio engine is started.
+ *  
+ *  Note: The other audio will be ducked for as long as the current session is active.
+ *
+ *  Default: YES if audioSessionCategory is kAudioSessionCategory_AmbientSound
+ */
+@property (nonatomic, assign) BOOL shouldDuckOtherApps;
 
 /*! 
  * Mute output
