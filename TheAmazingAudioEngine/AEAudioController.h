@@ -1216,6 +1216,18 @@ NSTimeInterval AEConvertFramesToSeconds(__unsafe_unretained AEAudioController *a
  */
 @property (nonatomic, assign) BOOL allowMixingWithOtherApps;
 
+/*! 
+ * Whether to duck audio in other apps
+ *
+ *  When this is YES, then audio in other apps will be ducked when the current application makes any sound.
+ *  If NO, then any other apps playing audio will be stopped when the audio engine is started.
+ *  
+ *  Note: The other audio will be ducked for as long as the current session is active.
+ *
+ *  Default: NO
+ */
+@property (nonatomic, assign) BOOL shouldDuckOtherApps;
+
 /*!
  * Whether to use the "Measurement" Audio Session Mode for improved audio quality and bass response.
  *

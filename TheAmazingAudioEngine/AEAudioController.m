@@ -1956,6 +1956,7 @@ NSTimeInterval AEConvertFramesToSeconds(__unsafe_unretained AEAudioController *T
     
     if ( [_audioSessionCategory isEqualToString:AVAudioSessionCategoryPlayAndRecord] || [_audioSessionCategory isEqualToString:AVAudioSessionCategoryPlayback] ) {
         options |= _allowMixingWithOtherApps ? AVAudioSessionCategoryOptionMixWithOthers : 0;
+        options |= _shouldDuckOtherApps ? AVAudioSessionCategoryOptionDuckOthers: 0;
     }
     
     NSError *error = nil;
@@ -1972,6 +1973,12 @@ NSTimeInterval AEConvertFramesToSeconds(__unsafe_unretained AEAudioController *T
 
 -(void)setAllowMixingWithOtherApps:(BOOL)allowMixingWithOtherApps {
     _allowMixingWithOtherApps = allowMixingWithOtherApps;
+    
+    [self setAudioSessionCategory:_audioSessionCategory];
+}
+
+- (void)setShouldDuckOtherApps:(BOOL)shouldDuckOtherApps {
+    _shouldDuckOtherApps = shouldDuckOtherApps;
     
     [self setAudioSessionCategory:_audioSessionCategory];
 }
